@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Check, Plus } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/data/products";
 import { formatPrice } from "@/lib/store";
+
 
 export function ProductCard({
   product,
@@ -45,6 +47,12 @@ export function ProductCard({
           {added ? <Check className="size-4" /> : <Plus className="size-4" />}
           {added ? "Added!" : "Add to Cart"}
         </Button>
+        <Button asChild variant="outline" className="mt-2 w-full">
+          <Link to="/products/$productId" params={{ productId: String(product.id) }}>
+            View Product
+          </Link>
+        </Button>
+
       </div>
     </article>
   );

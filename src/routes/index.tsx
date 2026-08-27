@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login } from "@/lib/auth.functions";
+import { getCredentials, login, type Credential } from "@/lib/auth.functions";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
@@ -26,10 +26,17 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [credentials, setCredentials] = useState<Credential[]>([]);
 
   useEffect(() => {
     if (ready && user) navigate({ to: "/products", replace: true });
   }, [ready, user, navigate]);
+
+  useEffect(() => {
+    getCredentials()
+      .then(setCredentials)
+      .catch(() => setCredentials([]));
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -109,9 +116,25 @@ function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Demo account: john@example.com / password123
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          New here?{" "}
+          <Link to="/signup" className="font-medium text-primary hover:underline">
+            Create an account
+          </Link>
         </p>
+
+        <div className="mt-4 rounded-xl border border-dashed border-border bg-muted/30 p-4">
+          <p className="text-center text-xs font-medium text-muted-foreground">
+            Registered accounts
+          </p>
+          <ul className="mt-2 space-y-1">
+            {credentials.map((c) => (
+              <li key={c.email} className="text-center text-xs text-muted-foreground">
+                {c.email} / {c.password}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </main>
   );

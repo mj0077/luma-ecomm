@@ -28,7 +28,7 @@ export function addUser(input: {
 }): DemoUser {
   const user: DemoUser = {
     id: Math.max(0, ...demoUsers.map((u) => u.id)) + 1,
-    name: input.email.split("@")[0],
+    name: input.email.split("@")[0] ?? input.email,
     email: input.email,
     password: input.password,
     city: input.city,

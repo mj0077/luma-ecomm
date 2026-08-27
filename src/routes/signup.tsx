@@ -4,50 +4,55 @@ import { Loader2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getCredentials, login, type Credential } from "@/lib/auth.functions";
+import { signup } from "@/lib/auth.functions";
 import { useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
-      { title: "Sign in — MyStore" },
-      { name: "description", content: "Sign in to MyStore to browse products and manage your cart." },
-      { property: "og:title", content: "Sign in — MyStore" },
-      { property: "og:description", content: "Sign in to MyStore to browse products and manage your cart." },
+      { title: "Create your account — MyStore" },
+      {
+        name: "description",
+        content: "Sign up for MyStore to browse the catalog and build your cart.",
+      },
+      { property: "og:title", content: "Create your account — MyStore" },
+      {
+        property: "og:description",
+        content: "Sign up for MyStore to browse the catalog and build your cart.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: LoginPage,
+  component: SignupPage,
 });
 
-function LoginPage() {
+function SignupPage() {
   const { ready, user, signIn } = useStore();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    city: "",
+    country: "",
+    phone: "",
+  });
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const [credentials, setCredentials] = useState<Credential[]>([]);
 
   useEffect(() => {
     if (ready && user) navigate({ to: "/products", replace: true });
   }, [ready, user, navigate]);
 
-  useEffect(() => {
-    getCredentials()
-      .then(setCredentials)
-      .catch(() => setCredentials([]));
-  }, []);
+  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (!email.trim() || !password) {
-      setError("Please enter both your email and password.");
-      return;
-    }
     setPending(true);
     try {
-      const result = await login({ data: { email, password } });
+      const result = await signup({ data: form });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -69,8 +74,8 @@ function LoginPage() {
             <ShoppingBag className="size-6 text-primary" />
             MyStore
           </div>
-          <h1 className="mt-6 text-2xl font-semibold tracking-tight">Welcome Back</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to continue</p>
+          <h1 className="mt-6 text-2xl font-semibold tracking-tight">Create Account</h1>
+          <p className="mt-1 text-sm text-muted-foreground">It only takes a moment</p>
         </div>
 
         <form
@@ -84,9 +89,10 @@ function LoginPage() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="john@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              maxLength={255}
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={update("email")}
             />
           </div>
           <div className="space-y-2">
@@ -94,10 +100,42 @@ function LoginPage() {
             <Input
               id="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
+              maxLength={100}
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={form.password}
+              onChange={update("password")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              maxLength={100}
+              placeholder="Mumbai"
+              value={form.city}
+              onChange={update("city")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Input
+              id="country"
+              maxLength={100}
+              placeholder="India"
+              value={form.country}
+              onChange={update("country")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              maxLength={20}
+              placeholder="+91 98765 43210"
+              value={form.phone}
+              onChange={update("phone")}
             />
           </div>
 
@@ -112,29 +150,16 @@ function LoginPage() {
 
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? <Loader2 className="size-4 animate-spin" /> : null}
-            {pending ? "Signing in…" : "Login"}
+            {pending ? "Creating account…" : "Sign up"}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          New here?{" "}
-          <Link to="/signup" className="font-medium text-primary hover:underline">
-            Create an account
+          Already have an account?{" "}
+          <Link to="/" className="font-medium text-primary hover:underline">
+            Sign in
           </Link>
         </p>
-
-        <div className="mt-4 rounded-xl border border-dashed border-border bg-muted/30 p-4">
-          <p className="text-center text-xs font-medium text-muted-foreground">
-            Registered accounts
-          </p>
-          <ul className="mt-2 space-y-1">
-            {credentials.map((c) => (
-              <li key={c.email} className="text-center text-xs text-muted-foreground">
-                {c.email} / {c.password}
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </main>
   );
